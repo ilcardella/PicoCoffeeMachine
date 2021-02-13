@@ -23,4 +23,6 @@ local-build: clean
 clean:
 > rm -rf build
 
-.PHONY: default docker build local-build clean
+ci: docker build
+
+.PHONY: default docker build local-build clean ci
