@@ -5,16 +5,22 @@ include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
 
 project(PicoCoffeeMachine)
 
+# Make lib_coffee_machine header available for the target
+find_package(lib_coffee_machine CONFIG REQUIRED)
+
 # initialize the Pico SDK
 pico_sdk_init()
 
-set(SOURCES src/hello_world.cpp)
-
-# rest of your project
+# Create the binary from sources
+set(SOURCES src/pico_coffee_machine_main.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(${PROJECT_NAME} pico_stdlib)
+# Link against lib_coffee_machine
+# pico_stdlib library adds commonly used features
+target_link_libraries(${PROJECT_NAME}
+                        pico_stdlib
+                        lib_coffee_machine::lib_coffee_machine
+)
 
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(${PROJECT_NAME})

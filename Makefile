@@ -4,7 +4,7 @@ endif
 .RECIPEPREFIX = >
 
 DOCKER_ENV_VARS = UID=$(shell id -u) GID=$(shell id -g)
-DOCKER_BUILD = $(DOCKER_ENV_VARS) docker-compose -f docker/docker-compose.yml build --force-rm
+DOCKER_BUILD = $(DOCKER_ENV_VARS) docker-compose -f docker/docker-compose.yml build --force-rm --no-cache
 DOCKER_RUN = $(DOCKER_ENV_VARS) docker-compose -f docker/docker-compose.yml run --rm
 BUILD_SERVICE_NAME = pico-builder
 
@@ -17,8 +17,8 @@ build:
 > $(DOCKER_RUN) $(BUILD_SERVICE_NAME) make local-build
 
 local-build: clean
-> mkdir build
-> cd build && cmake .. && make
+> mkdir -p build
+> cd build && cmake .. && cmake --build . --config Release -- -j $(nproc)
 
 clean:
 > rm -rf build
