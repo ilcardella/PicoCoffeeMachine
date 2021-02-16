@@ -15,7 +15,15 @@ RUN apt-get update \
 
 # Keep PICO_SDK_PATH persistent in the image
 ENV PICO_SDK_PATH=/opt/pico-sdk
-ARG PICO_SDK_VERSION=1.0.0
+ARG PICO_SDK_VERSION=1.0.1
 RUN git clone --depth 1 --branch ${PICO_SDK_VERSION} \
     https://github.com/raspberrypi/pico-sdk \
     ${PICO_SDK_PATH}
+
+# Install lib_coffee_machine
+ARG LCF_PATH=/opt/lib_coffee_machine
+ARG LCF_VERSION=main
+RUN git clone --depth 1 --branch ${LCF_VERSION} \
+    https://github.com/ilcardella/lib_coffee_machine \
+    ${LCF_PATH} \
+    && make -C ${LCF_PATH} install
