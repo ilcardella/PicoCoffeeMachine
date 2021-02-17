@@ -1,22 +1,39 @@
 #pragma once
 
+#include <pico/stdlib.h>
+
 #include <lib_coffee_machine/interfaces.h>
 
 class PicoIOPin : public IOPin
 {
   public:
-    PicoIOPin(const unsigned char &pin) : pin(pin)
+    PicoIOPin(const uint &pin) : pin(pin)
     {
+        gpio_init(pin);
     }
 
     void set_mode(const IOPin::Modes &mode) override
     {
-        // TODO
+        switch (mode)
+        {
+        case IOPin::Modes::IN:
+            gpio_set_dir(pin, false);
+            break;
+        case IOPin::Modes::OUT:
+            gpio_set_dir(pin, true);
+            break;
+        case IOPin::Modes::IN_PU:
+            gpio_set_dir(pin, false);
+            gpio_pull_up(pin);
+            break;
+        default:
+            break;
+        }
     }
 
     bool is_high() override
     {
-        return false;
+        return gpio_get(pin);
     }
 
     bool is_low() override
@@ -26,14 +43,14 @@ class PicoIOPin : public IOPin
 
     void digital_write_high() override
     {
-        // TODO
+        gpio_put(pin, 1);
     }
 
     void digital_write_low() override
     {
-        // TODO
+        gpio_put(pin, 0);
     }
 
   private:
-    unsigned char pin;
+    uint pin;
 };
