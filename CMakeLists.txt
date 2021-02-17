@@ -14,6 +14,7 @@ pico_sdk_init()
 # Create the binary from sources
 set(SOURCES src/pico_coffee_machine_main.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 # Link against lib_coffee_machine
 # pico_stdlib library adds commonly used features
