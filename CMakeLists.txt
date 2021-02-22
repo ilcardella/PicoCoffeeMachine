@@ -7,6 +7,7 @@ project(PicoCoffeeMachine)
 
 # Make lib_coffee_machine header available for the target
 find_package(lib_coffee_machine CONFIG REQUIRED)
+find_package(ssd1306_ascii_pico CONFIG REQUIRED)
 
 # initialize the Pico SDK
 pico_sdk_init()
@@ -20,7 +21,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE include)
 # pico_stdlib library adds commonly used features
 target_link_libraries(${PROJECT_NAME}
                         pico_stdlib
+                        hardware_i2c
                         lib_coffee_machine::lib_coffee_machine
+                        ssd1306_ascii_pico::ssd1306_ascii_pico
 )
 
 # create map/bin/hex/uf2 file in addition to ELF.

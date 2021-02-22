@@ -1,5 +1,7 @@
 #pragma once
 
+#include <pico/stdlib.h>
+
 class PicoAdapter
 {
   public:
@@ -21,7 +23,7 @@ class PicoAdapter
 
     inline static void delay(unsigned long ms)
     {
-        // TODO
+        sleep_ms(ms);
     }
 
     inline static unsigned long millis()

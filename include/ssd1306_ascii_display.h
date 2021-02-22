@@ -1,11 +1,12 @@
 #pragma once
 
 #include <lib_coffee_machine/interfaces.h>
+#include <ssd1306_ascii_pico/ssd1306_ascii_i2c.h>
 
 class SSD1306AsciiDisplay : public BaseDisplay
 {
   public:
-    SSD1306AsciiDisplay()
+    SSD1306AsciiDisplay() : bus(), display(bus)
     {
     }
 
@@ -43,4 +44,6 @@ class SSD1306AsciiDisplay : public BaseDisplay
     }
 
   private:
+    I2CBus bus;
+    SSD1306AsciiI2C display;
 };
