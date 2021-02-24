@@ -27,3 +27,11 @@ RUN git clone --depth 1 --branch ${LCF_VERSION} \
     https://github.com/ilcardella/lib_coffee_machine \
     ${LCF_PATH} \
     && make -C ${LCF_PATH} install
+
+# Install ssd1306_ascii_pico library
+ARG SSD1306_PATH=/opt/ssd1306_ascii_pico
+ARG SSD1306_VERSION=main
+RUN git clone --depth 1 --branch ${SSD1306_VERSION} \
+    https://github.com/ilcardella/ssd1306_ascii_pico \
+    ${SSD1306_PATH} \
+    && make -C ${SSD1306_PATH} install
