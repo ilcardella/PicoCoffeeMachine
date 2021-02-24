@@ -16,12 +16,17 @@ using Configuration = DefaultConfiguration;
 int main()
 {
     // Create the custom interfaces
-    KTypeThermocouple *water_temp_sensor = new KTypeThermocouple();
-    KTypeThermocouple *steam_temp_sensor = new KTypeThermocouple();
+    KTypeThermocouple *water_temp_sensor =
+        new KTypeThermocouple(Configuration::SPI_CLK_PIN, Configuration::SPI_DO_PIN,
+                              Configuration::WATER_TEMP_PIN);
+    KTypeThermocouple *steam_temp_sensor =
+        new KTypeThermocouple(Configuration::SPI_CLK_PIN, Configuration::SPI_DO_PIN,
+                              Configuration::STEAM_TEMP_PIN);
     PicoIOPin *mode_switch_pin = new PicoIOPin(Configuration::STEAM_SWITCH_PIN);
     PicoIOPin *heater_pin = new PicoIOPin(Configuration::HEATER_SSR_PIN);
-    PIDController *pid = new PIDController(1, 1, 1);
-    PicoSerial *serial = new PicoSerial(9600);
+    PIDController *pid = new PIDController(Configuration::P_GAIN, Configuration::I_GAIN,
+                                           Configuration::D_GAIN);
+    PicoSerial *serial = new PicoSerial(Configuration::SERIAL_BAUDRATE);
     SSD1306AsciiDisplay *display = new SSD1306AsciiDisplay();
 
     // Create the coffee machine instance

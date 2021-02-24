@@ -12,34 +12,43 @@ class SSD1306AsciiDisplay : public BaseDisplay
 
     bool initialise() override
     {
+        display.begin(&Adafruit128x64, 0x3C);
+        display.setFont(Adafruit5x7);
+        clear();
         return true;
     }
 
     bool clear() override
     {
+        display.clear();
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const char *data) override
     {
+        display.setCursor(col, row);
+        display.print(data);
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const int &data) override
     {
-        // TODO
+        display.setCursor(col, row);
+        display.print(data);
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const float &data) override
     {
-        // TODO
+        display.setCursor(col, row);
+        display.print(data);
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const double &data) override
     {
-        // TODO
+        display.setCursor(col, row);
+        display.print(data);
         return true;
     }
 
