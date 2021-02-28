@@ -21,3 +21,11 @@ $ make build
 ```
 
 The build process runs inside a Docker container allowing isolation and easier dependencies management.
+
+## PCB
+
+Schematics and PCB gerber files can be found in the `pcb` folder. The folder contains:
+- .zip archive containing gerber files for the PCB
+- .png showing the schematics and the PCB mask
+- .json file to open and edit the project in EasyEDA
+

@@ -8,3 +8,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release:
   - Added dependency `lib_coffee_machine`
+  - Added implementation of `lib_coffee_machine` interfaces for Raspberry Pico
+  - Added schematics and PCB files
