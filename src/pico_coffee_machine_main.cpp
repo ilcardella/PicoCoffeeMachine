@@ -1,8 +1,8 @@
 #include <cstdlib>
 
 #include <lib_coffee_machine/coffee_machine.h>
-#include <lib_coffee_machine/default_configuration.h>
 
+#include "configuration.h"
 #include "ktype_thermocouple.h"
 #include "pico_adapter.h"
 #include "pico_io_pin.h"
@@ -11,7 +11,6 @@
 #include "ssd1306_ascii_display.h"
 
 using Adapter = PicoAdapter;
-using Configuration = DefaultConfiguration;
 
 int main()
 {
