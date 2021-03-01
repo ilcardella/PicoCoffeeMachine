@@ -17,5 +17,10 @@ jobs:
         with:
           submodules: true
 
+      - name: Docker cache
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+
       - name: Build
         run: make ci
