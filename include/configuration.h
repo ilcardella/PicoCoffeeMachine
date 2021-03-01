@@ -8,10 +8,8 @@ struct Configuration : public DefaultConfiguration
     inline static constexpr unsigned char WATER_TEMP_PIN = 4;
     // Input pin of the steam temperature sensor
     inline static constexpr unsigned char STEAM_TEMP_PIN = 16;
-
     // Output PWM pin to control the boiler
     inline static constexpr unsigned char HEATER_SSR_PIN = 8;
-
     // Input pin to detect steam mode
     inline static constexpr unsigned char STEAM_SWITCH_PIN = 9;
 
@@ -21,5 +19,5 @@ struct Configuration : public DefaultConfiguration
 
     // I2C interface pins
     inline static constexpr unsigned char I2C_SDA_PIN = 2;
-    inline static constexpr unsigned char I2C_SDL_PIN = 3;
+    inline static constexpr unsigned char I2C_SCL_PIN = 3;
 };
