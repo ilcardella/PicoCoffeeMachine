@@ -1,4 +1,4 @@
-FROM ubuntu:latest AS pico-builder
+FROM ubuntu:latest AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
