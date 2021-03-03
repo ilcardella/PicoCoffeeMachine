@@ -25,7 +25,7 @@ int main()
     PicoIOPin *heater_pin = new PicoIOPin(Configuration::HEATER_SSR_PIN);
     PIDController *pid = new PIDController(Configuration::P_GAIN, Configuration::I_GAIN,
                                            Configuration::D_GAIN);
-    PicoSerial *serial = new PicoSerial(Configuration::SERIAL_BAUDRATE);
+    PicoSerial *serial = new PicoSerial();
     SSD1306AsciiDisplay *display = new SSD1306AsciiDisplay();
 
     // Create the coffee machine instance
