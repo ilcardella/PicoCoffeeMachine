@@ -2,12 +2,15 @@
 
 #include <lib_coffee_machine/interfaces.h>
 
+#include <pico/stdlib.h>
+#include <stdio.h>
+
 class PicoSerial : public BaseSerialInterface
 {
   public:
-    PicoSerial(const unsigned short &baudrate)
+    PicoSerial()
     {
-        // TODO
+        stdio_init_all();
     }
 
     void begin(const unsigned long &baudrate) override
@@ -28,7 +31,7 @@ class PicoSerial : public BaseSerialInterface
 
     size_t println(const char *value) override
     {
-        // TODO
+        printf(value);
         return 0;
     }
 };
