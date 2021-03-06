@@ -20,4 +20,8 @@ struct Configuration : public DefaultConfiguration
     // I2C interface pins
     inline static constexpr unsigned char I2C_SDA_PIN = 2;
     inline static constexpr unsigned char I2C_SCL_PIN = 3;
+
+    // Serial interface
+    inline static constexpr unsigned long SERIAL_BAUDRATE = 115200;
+    inline static constexpr bool ENABLE_OUTPUT = true;
 };

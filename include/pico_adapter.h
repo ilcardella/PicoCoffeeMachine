@@ -13,7 +13,7 @@ class PicoAdapter
 
     inline static unsigned long millis()
     {
-        return get_absolute_time();
+        return to_ms_since_boot(get_absolute_time());
     }
 
     inline static char *dtostrf(double val, signed char width, unsigned char prec,

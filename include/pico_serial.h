@@ -32,6 +32,7 @@ class PicoSerial : public BaseSerialInterface
     size_t println(const char *value) override
     {
         printf(value);
+        putchar('\n');
         return 0;
     }
 };
