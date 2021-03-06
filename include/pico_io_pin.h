@@ -7,9 +7,15 @@
 class PicoIOPin : public IOPin
 {
   public:
-    PicoIOPin(const uint &pin) : pin(pin)
+    PicoIOPin(const uint &p) : pin(p)
     {
         gpio_init(pin);
+    }
+
+    PicoIOPin(const uint &p, const IOPin::Modes &mode) : pin(p)
+    {
+        gpio_init(pin);
+        set_mode(mode);
     }
 
     void set_mode(const IOPin::Modes &mode) override

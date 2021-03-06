@@ -11,3 +11,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added implementation of `lib_coffee_machine` interfaces for Raspberry Pico
   - Added schematics and PCB files
   - Added dependency `SSD1306AScii-pico`
+  - Added LED blinking to show board status
