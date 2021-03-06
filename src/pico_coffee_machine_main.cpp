@@ -12,8 +12,20 @@
 
 using Adapter = PicoAdapter;
 
+bool blink_callback(struct repeating_timer *t)
+{
+    PicoIOPin *led = static_cast<PicoIOPin *>(t->user_data);
+    led->is_high() ? led->digital_write_low() : led->digital_write_high();
+    return true;
+}
+
 int main()
 {
+    // Use the on board LED to show the board is on
+    PicoIOPin led = PicoIOPin(PICO_DEFAULT_LED_PIN, IOPin::Modes::OUT);
+    struct repeating_timer timer;
+    add_repeating_timer_ms(500, blink_callback, &led, &timer);
+
     // Create the custom interfaces
     KTypeThermocouple *water_temp_sensor =
         new KTypeThermocouple(Configuration::SPI_CLK_PIN, Configuration::SPI_DO_PIN,
