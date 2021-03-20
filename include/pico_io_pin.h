@@ -23,13 +23,13 @@ class PicoIOPin : public IOPin
         switch (mode)
         {
         case IOPin::Modes::IN:
-            gpio_set_dir(pin, false);
+            gpio_set_dir(pin, GPIO_IN);
             break;
         case IOPin::Modes::OUT:
-            gpio_set_dir(pin, true);
+            gpio_set_dir(pin, GPIO_OUT);
             break;
         case IOPin::Modes::IN_PU:
-            gpio_set_dir(pin, false);
+            gpio_set_dir(pin, GPIO_IN);
             gpio_pull_up(pin);
             break;
         default:

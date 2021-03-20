@@ -5,8 +5,8 @@
 class PIDController : public Controller
 {
   public:
-    PIDController(const double &kp, const double &ki, const double &kd)
-        : kp(kp), ki(ki), kd(kd)
+    PIDController(const double &kp_gain, const double &ki_gain, const double &kd_gain)
+        : kp(kp_gain), ki(ki_gain), kd(kd_gain)
     {
     }
 
@@ -18,23 +18,22 @@ class PIDController : public Controller
 
     bool compute(const double &input, const double &setpoint, double &output) override
     {
-        double error = setpoint - input;
+        double error(0.0);
+        double error_rate(0.0);
+        double new_output(0.0);
 
-        // Integrative term
-        output_sum += (ki * error);
+        error = setpoint - input;
+        error_sum += error;
+        error_rate = (error - last_error);
 
-        // Proportional term
-        double temp_output = kp * error;
+        // Sum all the PID terms
+        new_output = (kp * error) + (ki * error_sum) - (kd * error_rate);
 
-        // Derivative term
-        temp_output += output_sum - kd * (input - last_input);
+        // Store error for next iteration
+        last_error = error;
 
         // Constraint output within limits
-        std::min(std::max(temp_output, min_output), max_output);
-
-        output = temp_output;
-
-        last_input = input;
+        output = limit_output(new_output);
         return true;
     }
 
@@ -52,6 +51,11 @@ class PIDController : public Controller
     double max_output = 255.0;
     double min_output = 0.0;
 
-    double last_input = 0.0;
-    double output_sum = 0.0;
+    double last_error = 0.0;
+    double error_sum = 0.0;
+
+    double limit_output(const double &value)
+    {
+        return std::min<double>(std::max<double>(value, min_output), max_output);
+    }
 };
