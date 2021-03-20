@@ -15,7 +15,7 @@ struct Configuration : public DefaultConfiguration
 
     // SPI interface common pins
     inline static constexpr unsigned char SPI_CLK_PIN = 6;
-    inline static constexpr unsigned char SPI_DO_PIN = 5;
+    inline static constexpr unsigned char SPI_CS_PIN = 5;
 
     // I2C interface pins
     inline static constexpr unsigned char I2C_SDA_PIN = 2;
@@ -24,4 +24,12 @@ struct Configuration : public DefaultConfiguration
     // Serial interface
     inline static constexpr unsigned long SERIAL_BAUDRATE = 115200;
     inline static constexpr bool ENABLE_OUTPUT = true;
+
+    // PID gains
+    // inline static constexpr double P_GAIN = 1.0;
+    // inline static constexpr double I_GAIN = 1.0;
+    // inline static constexpr double D_GAIN = 1.0;
+
+    inline static constexpr float WATER_TEMP_OFFSET = 0.0f; // degree celsius
+    inline static constexpr float STEAM_TEMP_OFFSET = 0.0f; // degree celsius
 };

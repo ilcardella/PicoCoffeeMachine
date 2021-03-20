@@ -1,5 +1,7 @@
 #include <cstdlib>
 
+#include <hardware/spi.h>
+
 #include <lib_coffee_machine/coffee_machine.h>
 
 #include "configuration.h"
@@ -21,6 +23,16 @@ bool blink_callback(struct repeating_timer *t)
 
 int main()
 {
+    // Initialise the SPI controller here as multiple sensors share the controller
+    spi_init(spi0, 500000);
+    gpio_set_function(Configuration::SPI_CLK_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(Configuration::SPI_CS_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(Configuration::WATER_TEMP_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(Configuration::STEAM_TEMP_PIN, GPIO_FUNC_SPI);
+    gpio_init(Configuration::SPI_CS_PIN);
+    gpio_set_dir(Configuration::SPI_CS_PIN, GPIO_OUT);
+    gpio_put(Configuration::SPI_CS_PIN, 1);
+
     // Use the on board LED to show the board is on
     PicoIOPin led = PicoIOPin(PICO_DEFAULT_LED_PIN, IOPin::Modes::OUT);
     struct repeating_timer timer;
@@ -28,10 +40,10 @@ int main()
 
     // Create the custom interfaces
     KTypeThermocouple *water_temp_sensor =
-        new KTypeThermocouple(Configuration::SPI_CLK_PIN, Configuration::SPI_DO_PIN,
+        new KTypeThermocouple(Configuration::SPI_CLK_PIN, Configuration::SPI_CS_PIN,
                               Configuration::WATER_TEMP_PIN);
     KTypeThermocouple *steam_temp_sensor =
-        new KTypeThermocouple(Configuration::SPI_CLK_PIN, Configuration::SPI_DO_PIN,
+        new KTypeThermocouple(Configuration::SPI_CLK_PIN, Configuration::SPI_CS_PIN,
                               Configuration::STEAM_TEMP_PIN);
     PicoIOPin *mode_switch_pin = new PicoIOPin(Configuration::STEAM_SWITCH_PIN);
     PicoIOPin *heater_pin = new PicoIOPin(Configuration::HEATER_SSR_PIN);
@@ -48,6 +60,7 @@ int main()
     while (true)
     {
         machine.spin();
+        sleep_ms(1);
     }
 
     return 0;
