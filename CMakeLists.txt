@@ -11,13 +11,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Make lib_coffee_machine header available for the target
 find_package(lib_coffee_machine CONFIG REQUIRED)
-find_package(ssd1306_ascii_pico CONFIG REQUIRED)
 
 # initialize the Pico SDK
 pico_sdk_init()
 
 # Create the binary from sources
-set(SOURCES src/pico_coffee_machine_main.cpp)
+set(SOURCES src/pico_coffee_machine_main.cpp
+            src/ssd1306/GFX.cpp
+            src/ssd1306/SSD1306.cpp
+)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
@@ -28,7 +30,6 @@ target_link_libraries(${PROJECT_NAME}
                         hardware_i2c
                         hardware_spi
                         lib_coffee_machine::lib_coffee_machine
-                        ssd1306_ascii_pico::ssd1306_ascii_pico
 )
 
 # Enable USB serial output over UART ports

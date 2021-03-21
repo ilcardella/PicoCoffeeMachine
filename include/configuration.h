@@ -26,7 +26,7 @@ struct Configuration : public DefaultConfiguration
     inline static constexpr bool ENABLE_OUTPUT = true;
 
     // PID gains
-    // inline static constexpr double P_GAIN = 1.0;
+    // inline static constexpr double P_GAIN = 30.0;
     // inline static constexpr double I_GAIN = 1.0;
     // inline static constexpr double D_GAIN = 1.0;
 
