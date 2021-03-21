@@ -1,11 +1,14 @@
 # Pico Coffee Machine
 
-This project is a PID controller (and more) for a `Gaggia Paros` (and possibly any other manual coffee machine) coffee machine using a Raspberry PI Pico and a few other components.
+This project aims to add a PID controller (and other features) to a `Gaggia Paros` coffee machine
+(and possibly any other single heater manual coffee machine) using a Raspberry PI Pico.
 
-The project is based on [ArduinoCoffeeMachine](https://github.com/ilcardella/ArduinoCoffeeMachine) which is the original project targeting an Arduino Nano.
+The project is based on [ArduinoCoffeeMachine](https://github.com/ilcardella/ArduinoCoffeeMachine) which uses an Arduino Nano.
 Both projects are based on [lib_coffee_machine](https://github.com/ilcardella/lib_coffee_machine) which is a C++ library providing an abstraction of a generic coffee machine.
 
 Please refer to the [ArduinoCoffeeMachine documentation](https://arduinocoffeemachine.readthedocs.io/en/latest/?badge=latest) for a detailed explanation of the design and components used.
+
+The SSD1306 display is driven using the [RPi-Pico-SSD1306-library](https://github.com/mbober1/RPi-Pico-SSD1306-library) library. All credits for that code goes to its creator.
 
 ## Getting Started
 
@@ -28,4 +31,3 @@ Schematics and PCB gerber files can be found in the `pcb` folder. The folder con
 - .zip archive containing gerber files for the PCB
 - .png showing the schematics and the PCB mask
 - .json file to open and edit the project in EasyEDA
-
