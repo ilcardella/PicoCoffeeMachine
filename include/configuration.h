@@ -30,6 +30,6 @@ struct Configuration : public DefaultConfiguration
     // inline static constexpr double I_GAIN = 1.0;
     // inline static constexpr double D_GAIN = 1.0;
 
-    inline static constexpr float WATER_TEMP_OFFSET = 0.0f; // degree celsius
-    inline static constexpr float STEAM_TEMP_OFFSET = 0.0f; // degree celsius
+    inline static constexpr float WATER_TEMP_OFFSET = -12.0f; // degree celsius
+    inline static constexpr float STEAM_TEMP_OFFSET = -12.0f; // degree celsius
 };

@@ -10,5 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added dependency `lib_coffee_machine`
   - Added implementation of `lib_coffee_machine` interfaces for Raspberry Pico
   - Added schematics and PCB files
-  - Added dependency `SSD1306AScii-pico`
+  - Added dependency `RPi-Pico-SSD1306-library` to control the OLED
   - Added LED blinking to show board status
+  - Added K-type thermocouple support with software SPI
