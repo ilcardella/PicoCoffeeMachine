@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hardware/spi.h>
 #include <pico/stdlib.h>
 
 #include <lib_coffee_machine/interfaces.h>
@@ -19,6 +18,7 @@ class KTypeThermocouple : public BaseSensor
 
         // Notify start of comms
         gpio_put(cs_pin, 0);
+        sleep_us(2);
 
         data = read_byte_from_spi();
         data <<= 8;
@@ -42,7 +42,25 @@ class KTypeThermocouple : public BaseSensor
     {
         uint8_t d(0);
 
-        spi_read_blocking(spi0, 0, &d, 1);
+        // FIXME: See main.cpp for a detailed description of this bug
+        // The following for loop can be replaced with the hardware spi read below
+        // spi_read_blocking(spi0, 0, &d, 1);
+
+        int i;
+
+        for (i = 7; i >= 0; i--)
+        {
+            gpio_put(clk_pin, 0);
+            sleep_us(2);
+            if (gpio_get(miso_pin))
+            {
+                // set the bit to 0 no matter what
+                d |= (1 << i);
+            }
+
+            gpio_put(clk_pin, 1);
+            sleep_us(2);
+        }
 
         return d;
     }

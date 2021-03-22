@@ -1,6 +1,5 @@
+// Bug in lib_coffee_machine requires this include
 #include <cstdlib>
-
-#include <hardware/spi.h>
 
 #include <lib_coffee_machine/coffee_machine.h>
 
@@ -21,17 +20,39 @@ bool blink_callback(struct repeating_timer *t)
     return true;
 }
 
-int main()
+void initialise_spi()
 {
-    // Initialise the SPI controller here as multiple sensors share the controller
-    spi_init(spi0, 500000);
-    gpio_set_function(Configuration::SPI_CLK_PIN, GPIO_FUNC_SPI);
-    gpio_set_function(Configuration::SPI_CS_PIN, GPIO_FUNC_SPI);
-    gpio_set_function(Configuration::WATER_TEMP_PIN, GPIO_FUNC_SPI);
-    gpio_set_function(Configuration::STEAM_TEMP_PIN, GPIO_FUNC_SPI);
+    // FIXME: Due to a bug in the PCB the sensors are sharing the CLK and the CS
+    // lines with separate MISO line. In order to use the hardware SPI on the Pico board
+    // this should change to share CLK and MISO and instead having separate CS lines
+    // For this reason the SPI is going to be handled from software
+    // Once the PCB is fixed, the following code can be uncommented and the software
+    // SPI logic can be removed
+    // ---------------------------------------------------
+    // spi_init(spi0, 500000);
+    // gpio_set_function(Configuration::SPI_CLK_PIN, GPIO_FUNC_SPI);
+    // gpio_set_function(Configuration::SPI_CS_PIN, GPIO_FUNC_SPI);
+    // gpio_set_function(Configuration::WATER_TEMP_PIN, GPIO_FUNC_SPI);
+    // gpio_set_function(Configuration::STEAM_TEMP_PIN, GPIO_FUNC_SPI);
+    // ---------------------------------------------------
+    gpio_init(Configuration::SPI_CLK_PIN);
+    gpio_set_dir(Configuration::SPI_CLK_PIN, GPIO_OUT);
+    gpio_init(Configuration::WATER_TEMP_PIN);
+    gpio_set_dir(Configuration::WATER_TEMP_PIN, GPIO_IN);
+    gpio_init(Configuration::STEAM_TEMP_PIN);
+    gpio_set_dir(Configuration::STEAM_TEMP_PIN, GPIO_IN);
+    // ---------------------------------------------------
+
+    // The CS line is always managed manually even with hardware spi
     gpio_init(Configuration::SPI_CS_PIN);
     gpio_set_dir(Configuration::SPI_CS_PIN, GPIO_OUT);
+    // Set CS line high to notify no comms requested for now
     gpio_put(Configuration::SPI_CS_PIN, 1);
+}
+
+int main()
+{
+    initialise_spi();
 
     // Use the on board LED to show the board is on
     PicoIOPin led = PicoIOPin(PICO_DEFAULT_LED_PIN, IOPin::Modes::OUT);

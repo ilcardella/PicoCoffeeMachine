@@ -28,7 +28,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE include)
 target_link_libraries(${PROJECT_NAME}
                         pico_stdlib
                         hardware_i2c
-                        hardware_spi
                         lib_coffee_machine::lib_coffee_machine
 )
 
