@@ -26,9 +26,9 @@ struct Configuration : public DefaultConfiguration
     inline static constexpr bool ENABLE_OUTPUT = true;
 
     // PID gains
-    inline static constexpr double P_GAIN = 50.0;
-    inline static constexpr double I_GAIN = 0.05;
-    inline static constexpr double D_GAIN = 0.0;
+    inline static constexpr double P_GAIN = 175.0;
+    inline static constexpr double I_GAIN = 0.15;
+    inline static constexpr double D_GAIN = 0.5;
 
     inline static constexpr float WATER_TEMP_OFFSET = -12.0f; // degree celsius
     inline static constexpr float STEAM_TEMP_OFFSET = -12.0f; // degree celsius
