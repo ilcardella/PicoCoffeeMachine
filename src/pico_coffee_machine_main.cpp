@@ -7,7 +7,6 @@
 #include "ktype_thermocouple.h"
 #include "pico_adapter.h"
 #include "pico_io_pin.h"
-#include "pico_pid_controller.h"
 #include "pico_serial.h"
 #include "ssd1306_ascii_display.h"
 
@@ -68,13 +67,11 @@ int main()
                               Configuration::STEAM_TEMP_PIN);
     PicoIOPin *mode_switch_pin = new PicoIOPin(Configuration::STEAM_SWITCH_PIN);
     PicoIOPin *heater_pin = new PicoIOPin(Configuration::HEATER_SSR_PIN);
-    PIDController *pid = new PIDController(Configuration::P_GAIN, Configuration::I_GAIN,
-                                           Configuration::D_GAIN);
     PicoSerial *serial = new PicoSerial();
     SSD1306AsciiDisplay *display = new SSD1306AsciiDisplay();
 
     // Create the coffee machine instance
-    CoffeeMachine<Adapter, Configuration> machine(pid, serial, mode_switch_pin, display,
+    CoffeeMachine<Adapter, Configuration> machine(serial, mode_switch_pin, display,
                                                   heater_pin, water_temp_sensor,
                                                   steam_temp_sensor);
 

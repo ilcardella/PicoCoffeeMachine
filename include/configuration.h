@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lib_coffee_machine/default_configuration.h>
+#include <lib_coffee_machine/default/configuration.h>
 
 struct Configuration : public DefaultConfiguration
 {
