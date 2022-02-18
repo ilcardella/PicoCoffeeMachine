@@ -14,6 +14,17 @@
 #include "configuration.h"
 #include "pico_adapter.h"
 
+bool timer_callback(struct repeating_timer *t)
+{
+    unsigned int *counter = static_cast<unsigned int *>(t->user_data);
+    *counter = *counter + 1;
+    if (*counter > 30)
+    {
+        *counter = 1;
+    }
+    return true;
+}
+
 class SSD1306AsciiDisplay : public BaseDisplay
 {
   public:
@@ -39,6 +50,9 @@ class SSD1306AsciiDisplay : public BaseDisplay
         oled->setBuffer(ICON_RPI_PICO);
         oled->sendBuffer();
         start_time = to_ms_since_boot(get_absolute_time());
+
+        add_repeating_timer_ms(1000, timer_callback, &extraction_counter, &timer);
+
         return true;
     }
 
@@ -89,6 +103,8 @@ class SSD1306AsciiDisplay : public BaseDisplay
     bool print_custom_display(const Machine::Status &status) override;
 
   private:
+    struct repeating_timer timer;
+
     unsigned normalise_row(const unsigned &row)
     {
         auto actual_row(row);
@@ -117,6 +133,7 @@ class SSD1306AsciiDisplay : public BaseDisplay
 
     static constexpr unsigned long LOGO_TIME = 2000; // ms
     unsigned long start_time = 0.0;
+    unsigned int extraction_counter = 0;
 };
 
 template <>
@@ -151,8 +168,8 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
 
     Machine::Mode mode = status.machine_mode;
     double temperature = status.current_temperature;
-    unsigned int eco_countdown = 2400;
-    unsigned int timer = 30;
+    long up_time = PicoAdapter::millis() - status.start_timestamp;
+    unsigned int eco_countdown = Configuration::SAFETY_TIMEOUT - up_time;
 
     // Change the main icon based on the machine status
     if (mode == Machine::Mode::WATER_MODE)
@@ -166,8 +183,8 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
 
     // Draw secondary information after the icons
     draw<double>(1, 56, temperature);
-    draw<unsigned int>(60, 56, static_cast<unsigned int>(eco_countdown / 60));
-    draw<unsigned int>(110, 56, timer);
+    draw<unsigned int>(60, 56, static_cast<unsigned int>(eco_countdown / (60 * 1000)));
+    draw<unsigned int>(110, 56, extraction_counter);
 
     return true;
 }
