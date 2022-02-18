@@ -8,7 +8,7 @@ Both projects are based on [lib_coffee_machine](https://github.com/ilcardella/li
 
 Please refer to the [ArduinoCoffeeMachine documentation](https://arduinocoffeemachine.readthedocs.io/en/latest/?badge=latest) for a detailed explanation of the design and components used.
 
-The SSD1306 display is driven using the [RPi-Pico-SSD1306-library](https://github.com/mbober1/RPi-Pico-SSD1306-library) library. All credits for that code goes to its creator.
+The SSD1306 display is driven using the [pico-ssd1306](https://github.com/Harbys/pico-ssd1306) library. All credits for that code goes to its creator.
 
 ## Getting Started
 
