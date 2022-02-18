@@ -3,19 +3,34 @@
 #include <hardware/i2c.h>
 #include <pico/stdlib.h>
 
+#include <lib_coffee_machine/common.h>
 #include <lib_coffee_machine/interfaces.h>
 
-#include "ssd1306/GFX.hpp"
-#include "ssd1306/logo.hpp"
+#include "ssd1306.h"
+#include "textRenderer/TextRenderer.h"
+
+#include "icons.h"
 
 #include "configuration.h"
+#include "pico_adapter.h"
+
+bool timer_callback(struct repeating_timer *t)
+{
+    unsigned int *counter = static_cast<unsigned int *>(t->user_data);
+    *counter = *counter + 1;
+    if (*counter > 30)
+    {
+        *counter = 1;
+    }
+    return true;
+}
 
 class SSD1306AsciiDisplay : public BaseDisplay
 {
   public:
     SSD1306AsciiDisplay()
     {
-        i2c_init(i2c1, 400000); // Initialize I2C on i2c1 port at 400kHz
+        i2c_init(i2c1, 1000000); // Initialize I2C on i2c1 port at 1MHz
         gpio_set_function(Configuration::I2C_SDA_PIN, GPIO_FUNC_I2C);
         gpio_set_function(Configuration::I2C_SCL_PIN, GPIO_FUNC_I2C);
         gpio_pull_up(Configuration::I2C_SDA_PIN);
@@ -30,9 +45,14 @@ class SSD1306AsciiDisplay : public BaseDisplay
 
     bool initialise() override
     {
-        oled = new GFX(0x3C, 128, 64, i2c1);
-        oled->display(logo);
+        oled = new pico_ssd1306::SSD1306(i2c1, 0x3C, pico_ssd1306::Size::W128xH64);
+        oled->setOrientation(0);
+        oled->setBuffer(ICON_RPI_PICO);
+        oled->sendBuffer();
         start_time = to_ms_since_boot(get_absolute_time());
+
+        add_repeating_timer_ms(1000, timer_callback, &extraction_counter, &timer);
+
         return true;
     }
 
@@ -47,7 +67,7 @@ class SSD1306AsciiDisplay : public BaseDisplay
 
     bool print(const unsigned &col, const unsigned &row, const char *data) override
     {
-        oled->drawString(col, normalise_row(row), data);
+        drawText(oled, FONT, data, col, normalise_row(row));
         return true;
     }
 
@@ -71,14 +91,20 @@ class SSD1306AsciiDisplay : public BaseDisplay
 
     bool display() override
     {
-        if (not is_logo_time())
-        {
-            oled->display();
-        }
+        oled->sendBuffer();
         return true;
     }
 
+    bool use_custom_display() override
+    {
+        return true;
+    }
+
+    bool print_custom_display(const Machine::Status &status) override;
+
   private:
+    struct repeating_timer timer;
+
     unsigned normalise_row(const unsigned &row)
     {
         auto actual_row(row);
@@ -99,8 +125,66 @@ class SSD1306AsciiDisplay : public BaseDisplay
         return false;
     }
 
-    GFX *oled = nullptr;
+    template <typename T>
+    void draw(const unsigned &col, const unsigned &row, const T &value);
+
+    pico_ssd1306::SSD1306 *oled = nullptr;
+    const unsigned char *FONT = font_8x8;
 
     static constexpr unsigned long LOGO_TIME = 2000; // ms
     unsigned long start_time = 0.0;
+    unsigned int extraction_counter = 0;
 };
+
+template <>
+void SSD1306AsciiDisplay::draw(const unsigned &col, const unsigned &row,
+                               const double &value)
+{
+    char output[10];
+    char buffer[6];
+    PicoAdapter::dtostrf(value, 4, 1, buffer);
+    snprintf(output, 10, "%s", buffer);
+
+    drawText(oled, FONT, output, col, row);
+}
+
+template <>
+void SSD1306AsciiDisplay::draw(const unsigned &col, const unsigned &row,
+                               const unsigned int &value)
+{
+    char output[10];
+    snprintf(output, 10, "%d", value);
+
+    drawText(oled, FONT, output, col, row);
+}
+
+bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
+{
+    // Show the initial log for the configured amount of time
+    if (is_logo_time())
+    {
+        return true;
+    }
+
+    Machine::Mode mode = status.machine_mode;
+    double temperature = status.current_temperature;
+    long up_time = PicoAdapter::millis() - status.start_timestamp;
+    unsigned int eco_countdown = Configuration::SAFETY_TIMEOUT - up_time;
+
+    // Change the main icon based on the machine status
+    if (mode == Machine::Mode::WATER_MODE)
+    {
+        oled->addBitmapImage(0, 0, 128, 40, ICON_COFFEE);
+    }
+    else
+    {
+        oled->addBitmapImage(0, 0, 128, 40, ICON_STEAM);
+    }
+
+    // Draw secondary information after the icons
+    draw<double>(1, 56, temperature);
+    draw<unsigned int>(60, 56, static_cast<unsigned int>(eco_countdown / (60 * 1000)));
+    draw<unsigned int>(110, 56, extraction_counter);
+
+    return true;
+}

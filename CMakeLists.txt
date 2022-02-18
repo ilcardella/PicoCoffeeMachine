@@ -15,11 +15,10 @@ find_package(lib_coffee_machine CONFIG REQUIRED)
 # initialize the Pico SDK
 pico_sdk_init()
 
+add_subdirectory(extern/pico-ssd1306)
+
 # Create the binary from sources
-set(SOURCES src/pico_coffee_machine_main.cpp
-            src/ssd1306/GFX.cpp
-            src/ssd1306/SSD1306.cpp
-)
+set(SOURCES src/pico_coffee_machine_main.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
@@ -29,6 +28,7 @@ target_link_libraries(${PROJECT_NAME}
                         pico_stdlib
                         hardware_i2c
                         lib_coffee_machine::lib_coffee_machine
+                        pico_ssd1306
 )
 
 # Enable USB serial output over UART ports
