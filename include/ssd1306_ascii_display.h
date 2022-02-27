@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <functional>
+
 #include <hardware/i2c.h>
 #include <pico/stdlib.h>
 
@@ -14,7 +17,7 @@
 #include "configuration.h"
 #include "pico_adapter.h"
 
-bool timer_callback(struct repeating_timer *t)
+bool extraction_timer_callback(struct repeating_timer *t)
 {
     unsigned int *counter = static_cast<unsigned int *>(t->user_data);
     *counter = *counter + 1;
@@ -51,7 +54,9 @@ class SSD1306AsciiDisplay : public BaseDisplay
         oled->sendBuffer();
         start_time = to_ms_since_boot(get_absolute_time());
 
-        add_repeating_timer_ms(1000, timer_callback, &extraction_counter, &timer);
+        // TODO This is unnecessary, we can use millis() % 30 to have a 30s counter
+        add_repeating_timer_ms(1000, extraction_timer_callback, &extraction_counter,
+                               &extraction_timer);
 
         return true;
     }
@@ -73,19 +78,19 @@ class SSD1306AsciiDisplay : public BaseDisplay
 
     bool print(const unsigned &col, const unsigned &row, const int &data) override
     {
-        // TODO
+        // TODO drawText accepts a char* so the data must be converted first
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const float &data) override
     {
-        // TODO
+        // TODO drawText accepts a char* so the data must be converted first
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const double &data) override
     {
-        // TODO
+        // TODO drawText accepts a char* so the data must be converted first
         return true;
     }
 
@@ -103,7 +108,7 @@ class SSD1306AsciiDisplay : public BaseDisplay
     bool print_custom_display(const Machine::Status &status) override;
 
   private:
-    struct repeating_timer timer;
+    struct repeating_timer extraction_timer;
 
     unsigned normalise_row(const unsigned &row)
     {
@@ -123,6 +128,38 @@ class SSD1306AsciiDisplay : public BaseDisplay
             return true;
         }
         return false;
+    }
+
+    /**
+     * @brief Alternate 2 different action based on the specified period to simulate a
+     * blinking effect
+     *
+     * @param period The period of the blinking effect
+     * @param timestamp The current up time timestamp (system millis())
+     * @param blink_on The function to call when the blink should be on
+     * @param blink_off The function to call when the blink should be off
+     * @param enable_blinking (optional) condition to enable/disable the blinking
+     */
+    void apply_blinking(
+        const unsigned int &period, const unsigned long &timestamp,
+        std::function<void(void)> blink_on, std::function<void(void)> blink_off,
+        std::function<bool(void)> enable_blinking = []() { return true; })
+    {
+        if (enable_blinking())
+        {
+            if ((timestamp % (period * 2)) > period)
+            {
+                blink_on();
+            }
+            else
+            {
+                blink_off();
+            }
+        }
+        else
+        {
+            blink_on();
+        }
     }
 
     template <typename T>
@@ -166,19 +203,47 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
         return true;
     }
 
-    Machine::Mode mode = status.machine_mode;
-    double temperature = status.current_temperature;
-    long up_time = PicoAdapter::millis() - status.start_timestamp;
-    unsigned int eco_countdown = Configuration::SAFETY_TIMEOUT - up_time;
+    const long now = PicoAdapter::millis();
+    const Machine::Mode mode = status.machine_mode;
+    const double temperature = status.current_temperature;
+    const long up_time = now - status.start_timestamp;
+    const long eco_countdown = std::max<long>(0, Configuration::SAFETY_TIMEOUT - up_time);
 
-    // Change the main icon based on the machine status
+    std::function<bool(void)> temp_ready = [&status]() {
+        return std::abs(status.target_temperature - status.current_temperature) < 2.0;
+    };
+
+    // TODO if eco_countdown is 0, then we should show a specific icon
+
+    // Change the main icon based on the machine mode and make them blink if the
+    // temperature is not within a "ready" range
     if (mode == Machine::Mode::WATER_MODE)
     {
-        oled->addBitmapImage(0, 0, 128, 40, ICON_COFFEE);
+        apply_blinking(
+            500, now,
+            [this]() {
+                oled->addBitmapImage(0, 0, ICON_COFFEE_WIDTH, ICON_COFFEE_HEIGHT,
+                                     ICON_COFFEE);
+            },
+            [this]() {
+                oled->addBitmapImage(0, 0, ICON_EMPTY_WIDTH, ICON_EMPTY_HEIGHT,
+                                     ICON_EMPTY);
+            },
+            temp_ready);
     }
     else
     {
-        oled->addBitmapImage(0, 0, 128, 40, ICON_STEAM);
+        apply_blinking(
+            500, now,
+            [this]() {
+                oled->addBitmapImage(0, 0, ICON_STEAM_WIDTH, ICON_STEAM_HEIGHT,
+                                     ICON_STEAM);
+            },
+            [this]() {
+                oled->addBitmapImage(0, 0, ICON_EMPTY_WIDTH, ICON_EMPTY_HEIGHT,
+                                     ICON_EMPTY);
+            },
+            temp_ready);
     }
 
     // Draw secondary information after the icons
