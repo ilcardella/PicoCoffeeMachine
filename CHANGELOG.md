@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed library to interface with SSD1306 display
 - The user interface shows an extraction timer to help measure the coffee extraction
 - The user interface shows the "eco time": minutes until the machine auto shut down
+- Main display icons blink if the temperature is not within the target tolerance range
 
 ### Removed
 - Removed custom PID controller and use default one included in lib_coffee_machine
