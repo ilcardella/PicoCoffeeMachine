@@ -209,8 +209,8 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
     const long up_time = now - status.start_timestamp;
     const long eco_countdown = std::max<long>(0, Configuration::SAFETY_TIMEOUT - up_time);
 
-    std::function<bool(void)> temp_ready = [&status]() {
-        return std::abs(status.target_temperature - status.current_temperature) < 2.0;
+    std::function<bool(void)> temp_not_ready = [&status]() {
+        return std::abs(status.target_temperature - status.current_temperature) > 3.0;
     };
 
     // TODO if eco_countdown is 0, then we should show a specific icon
@@ -220,7 +220,7 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
     if (mode == Machine::Mode::WATER_MODE)
     {
         apply_blinking(
-            500, now,
+            1000, now,
             [this]() {
                 oled->addBitmapImage(0, 0, ICON_COFFEE_WIDTH, ICON_COFFEE_HEIGHT,
                                      ICON_COFFEE);
@@ -229,12 +229,12 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
                 oled->addBitmapImage(0, 0, ICON_EMPTY_WIDTH, ICON_EMPTY_HEIGHT,
                                      ICON_EMPTY);
             },
-            temp_ready);
+            temp_not_ready);
     }
     else
     {
         apply_blinking(
-            500, now,
+            1000, now,
             [this]() {
                 oled->addBitmapImage(0, 0, ICON_STEAM_WIDTH, ICON_STEAM_HEIGHT,
                                      ICON_STEAM);
@@ -243,7 +243,7 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
                 oled->addBitmapImage(0, 0, ICON_EMPTY_WIDTH, ICON_EMPTY_HEIGHT,
                                      ICON_EMPTY);
             },
-            temp_ready);
+            temp_not_ready);
     }
 
     // Draw secondary information after the icons
