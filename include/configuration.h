@@ -23,7 +23,7 @@ struct Configuration : public DefaultConfiguration
 
     // Serial interface
     inline static constexpr unsigned long SERIAL_BAUDRATE = 115200;
-    inline static constexpr bool ENABLE_OUTPUT = true;
+    inline static constexpr bool ENABLE_OUTPUT = false;
 
     // PID gains
     inline static constexpr double P_GAIN = 175.0;
@@ -32,4 +32,8 @@ struct Configuration : public DefaultConfiguration
 
     inline static constexpr float WATER_TEMP_OFFSET = -12.0f; // degree celsius
     inline static constexpr float STEAM_TEMP_OFFSET = -12.0f; // degree celsius
+
+    inline static constexpr int SAFETY_MAX_TEMP = 145; // degree celsius
+
+    inline static constexpr double TARGET_STEAM_TEMP = 135.0;
 };
