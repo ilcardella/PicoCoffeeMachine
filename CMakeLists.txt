@@ -1,16 +1,12 @@
 cmake_minimum_required(VERSION 3.12)
 
+# Make lib_coffee_machine header available for the target
+find_package(lib_coffee_machine CONFIG REQUIRED)
+
 # PICO_SDK_PATH env var must point to the sdk installation path
 include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
 
 project(PicoCoffeeMachine)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# Make lib_coffee_machine header available for the target
-find_package(lib_coffee_machine CONFIG REQUIRED)
 
 # initialize the Pico SDK
 pico_sdk_init()
@@ -20,6 +16,7 @@ add_subdirectory(extern/pico-ssd1306)
 # Create the binary from sources
 set(SOURCES src/pico_coffee_machine_main.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 # Link against lib_coffee_machine
