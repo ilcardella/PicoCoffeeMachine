@@ -51,6 +51,8 @@ void initialise_spi()
 
 int main()
 {
+    stdio_init_all();
+
     initialise_spi();
 
     // Use the on board LED to show the board is on
