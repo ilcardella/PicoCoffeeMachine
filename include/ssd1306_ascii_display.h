@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <functional>
 
 #include <hardware/i2c.h>
@@ -9,31 +8,21 @@
 #include <lib_coffee_machine/common.h>
 #include <lib_coffee_machine/interfaces.h>
 
+extern "C"
+{
 #include "ssd1306.h"
-#include "textRenderer/TextRenderer.h"
+}
 
 #include "icons.h"
-
 #include "configuration.h"
 #include "pico_adapter.h"
 
-bool extraction_timer_callback(struct repeating_timer *t)
-{
-    unsigned int *counter = static_cast<unsigned int *>(t->user_data);
-    *counter = *counter + 1;
-    if (*counter > 30)
-    {
-        *counter = 1;
-    }
-    return true;
-}
-
 class SSD1306AsciiDisplay : public BaseDisplay
 {
-  public:
+public:
     SSD1306AsciiDisplay()
     {
-        i2c_init(i2c1, 1000000); // Initialize I2C on i2c1 port at 1MHz
+        i2c_init(i2c1, 400000); // Initialize I2C on i2c1 port at 400KHz
         gpio_set_function(Configuration::I2C_SDA_PIN, GPIO_FUNC_I2C);
         gpio_set_function(Configuration::I2C_SCL_PIN, GPIO_FUNC_I2C);
         gpio_pull_up(Configuration::I2C_SDA_PIN);
@@ -42,61 +31,74 @@ class SSD1306AsciiDisplay : public BaseDisplay
 
     ~SSD1306AsciiDisplay()
     {
-        delete oled;
-        oled = nullptr;
+        if (oled)
+        {
+            ssd1306_deinit(oled);
+            delete oled;
+            oled = nullptr;
+        }
     }
 
     bool initialise() override
     {
-        oled = new pico_ssd1306::SSD1306(i2c1, 0x3C, pico_ssd1306::Size::W128xH64);
-        oled->setOrientation(0);
-        oled->setBuffer(ICON_RPI_PICO);
-        oled->sendBuffer();
-        start_time = to_ms_since_boot(get_absolute_time());
+        oled = new ssd1306_t();
+        oled->external_vcc = false;
+        ssd1306_init(oled, 128, 64, 0x3C, i2c1);
+        ssd1306_clear(oled);
 
-        // TODO This is unnecessary, we can use millis() % 30 to have a 30s counter
-        add_repeating_timer_ms(1000, extraction_timer_callback, &extraction_counter,
-                               &extraction_timer);
+        // TODO Show initial logo
+        // ssd1306_bmp_show_image(oled, ICON_RPI_PICO, sizeof(ICON_RPI_PICO) / sizeof(ICON_RPI_PICO[0]));
+        ssd1306_draw_string(oled, 0, 0, 3, "STARTING...");
+        ssd1306_show(oled);
+
+        // Record the start time
+        start_time = PicoAdapter::millis();
 
         return true;
     }
 
     bool clear() override
     {
-        if (not is_logo_time())
+        if (oled && !is_logo_time())
         {
-            oled->clear();
+            ssd1306_clear(oled);
         }
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const char *data) override
     {
-        drawText(oled, FONT, data, col, normalise_row(row));
+        if (oled)
+        {
+            ssd1306_draw_string(oled, col, row, 1, data);
+        }
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const int &data) override
     {
-        // TODO drawText accepts a char* so the data must be converted first
+        // TODO ssd1306_draw_string accepts a char* so the data must be converted first
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const float &data) override
     {
-        // TODO drawText accepts a char* so the data must be converted first
+        // TODO ssd1306_draw_string accepts a char* so the data must be converted first
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const double &data) override
     {
-        // TODO drawText accepts a char* so the data must be converted first
+        // TODO ssd1306_draw_string accepts a char* so the data must be converted first
         return true;
     }
 
     bool display() override
     {
-        oled->sendBuffer();
+        if (oled)
+        {
+            ssd1306_show(oled);
+        }
         return true;
     }
 
@@ -107,27 +109,10 @@ class SSD1306AsciiDisplay : public BaseDisplay
 
     bool print_custom_display(const Machine::Status &status) override;
 
-  private:
-    struct repeating_timer extraction_timer;
-
-    unsigned normalise_row(const unsigned &row)
-    {
-        auto actual_row(row);
-        if (row > 1)
-        {
-            actual_row *= 10;
-        }
-        return actual_row;
-    }
-
+private:
     bool is_logo_time()
     {
-        auto now = to_ms_since_boot(get_absolute_time());
-        if (now - start_time < LOGO_TIME)
-        {
-            return true;
-        }
-        return false;
+        return (PicoAdapter::millis() - start_time) < LOGO_TIME;
     }
 
     /**
@@ -138,23 +123,17 @@ class SSD1306AsciiDisplay : public BaseDisplay
      * @param timestamp The current up time timestamp (system millis())
      * @param blink_on The function to call when the blink should be on
      * @param blink_off The function to call when the blink should be off
-     * @param enable_blinking (optional) condition to enable/disable the blinking
+     * @param predicate (optional) condition to enable/disable the blinking
      */
     void apply_blinking(
-        const unsigned int &period, const unsigned long &timestamp,
+        const uint32_t &period, const unsigned long &timestamp,
         std::function<void(void)> blink_on, std::function<void(void)> blink_off,
-        std::function<bool(void)> enable_blinking = []() { return true; })
+        std::function<bool(void)> predicate = []()
+        { return true; })
     {
-        if (enable_blinking())
+        if (predicate())
         {
-            if ((timestamp % (period * 2)) > period)
-            {
-                blink_on();
-            }
-            else
-            {
-                blink_off();
-            }
+            ((timestamp % (period * 2)) > period) ? blink_on() : blink_off();
         }
         else
         {
@@ -163,18 +142,15 @@ class SSD1306AsciiDisplay : public BaseDisplay
     }
 
     template <typename T>
-    void draw(const unsigned &col, const unsigned &row, const T &value);
+    void draw(const uint32_t &col, const uint32_t &row, const T &value);
 
-    pico_ssd1306::SSD1306 *oled = nullptr;
-    const unsigned char *FONT = font_8x8;
-
+    ssd1306_t *oled;
     static constexpr unsigned long LOGO_TIME = 2000; // ms
     unsigned long start_time = 0.0;
-    unsigned int extraction_counter = 0;
 };
 
 template <>
-void SSD1306AsciiDisplay::draw(const unsigned &col, const unsigned &row,
+void SSD1306AsciiDisplay::draw(const uint32_t &col, const uint32_t &row,
                                const double &value)
 {
     char output[10];
@@ -182,17 +158,17 @@ void SSD1306AsciiDisplay::draw(const unsigned &col, const unsigned &row,
     PicoAdapter::dtostrf(value, 4, 1, buffer);
     snprintf(output, 10, "%s", buffer);
 
-    drawText(oled, FONT, output, col, row);
+    ssd1306_draw_string(oled, col, row, 1, output);
 }
 
 template <>
-void SSD1306AsciiDisplay::draw(const unsigned &col, const unsigned &row,
-                               const unsigned int &value)
+void SSD1306AsciiDisplay::draw(const uint32_t &col, const uint32_t &row,
+                               const uint32_t &value)
 {
     char output[10];
     snprintf(output, 10, "%d", value);
 
-    drawText(oled, FONT, output, col, row);
+    ssd1306_draw_string(oled, col, row, 1, output);
 }
 
 bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
@@ -209,25 +185,32 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
     const long up_time = now - status.start_timestamp;
     const long eco_countdown = std::max<long>(0, Configuration::SAFETY_TIMEOUT - up_time);
 
-    std::function<bool(void)> temp_not_ready = [&status]() {
+    std::function<bool(void)> temp_not_ready = [&status]()
+    {
         return std::abs(status.target_temperature - status.current_temperature) > 3.0;
     };
 
-    // TODO if eco_countdown is 0, then we should show a specific icon
-
+    // If eco_countdown is 0, then show a specific icon
+    if (eco_countdown < 1)
+    {
+        ssd1306_draw_string(oled, 0, 0, 3, "TIMEOUT");
+    }
     // Change the main icon based on the machine mode and make them blink if the
     // temperature is not within a "ready" range
-    if (mode == Machine::Mode::WATER_MODE)
+    // TODO ssd1306_bmp_show_image does not work with the images in icons.h
+    else if (mode == Machine::Mode::WATER_MODE)
     {
         apply_blinking(
             1000, now,
-            [this]() {
-                oled->addBitmapImage(0, 0, ICON_COFFEE_WIDTH, ICON_COFFEE_HEIGHT,
-                                     ICON_COFFEE);
+            [this]()
+            {
+                // ssd1306_bmp_show_image(oled, ICON_COFFEE, sizeof(ICON_COFFEE) / sizeof(ICON_COFFEE[0]));
+                ssd1306_draw_string(oled, 0, 0, 3, "COFFEE");
             },
-            [this]() {
-                oled->addBitmapImage(0, 0, ICON_EMPTY_WIDTH, ICON_EMPTY_HEIGHT,
-                                     ICON_EMPTY);
+            [this]()
+            {
+                // ssd1306_bmp_show_image(oled, ICON_EMPTY, sizeof(ICON_EMPTY) / sizeof(ICON_EMPTY[0]));
+                ssd1306_draw_string(oled, 0, 0, 3, "");
             },
             temp_not_ready);
     }
@@ -235,21 +218,24 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
     {
         apply_blinking(
             1000, now,
-            [this]() {
-                oled->addBitmapImage(0, 0, ICON_STEAM_WIDTH, ICON_STEAM_HEIGHT,
-                                     ICON_STEAM);
+            [this]()
+            {
+                // ssd1306_bmp_show_image(oled, ICON_STEAM, sizeof(ICON_STEAM) / sizeof(ICON_STEAM[0]));
+                ssd1306_draw_string(oled, 0, 0, 3, "STEAM");
             },
-            [this]() {
-                oled->addBitmapImage(0, 0, ICON_EMPTY_WIDTH, ICON_EMPTY_HEIGHT,
-                                     ICON_EMPTY);
+            [this]()
+            {
+                // ssd1306_bmp_show_image(oled, ICON_EMPTY, sizeof(ICON_EMPTY) / sizeof(ICON_EMPTY[0]));
+                ssd1306_draw_string(oled, 0, 0, 3, "");
             },
             temp_not_ready);
     }
 
     // Draw secondary information after the icons
     draw<double>(1, 56, temperature);
-    draw<unsigned int>(60, 56, static_cast<unsigned int>(eco_countdown / (60 * 1000)));
-    draw<unsigned int>(110, 56, extraction_counter);
+    draw<uint32_t>(60, 56, static_cast<uint32_t>(eco_countdown / (60 * 1000)));
+    auto extraction_counter = (static_cast<uint32_t>(PicoAdapter::millis() / 1000) % 30) + 1;
+    draw<uint32_t>(110, 56, extraction_counter);
 
     return true;
 }

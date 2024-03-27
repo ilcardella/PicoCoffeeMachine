@@ -6,12 +6,15 @@ find_package(lib_coffee_machine CONFIG REQUIRED)
 # PICO_SDK_PATH env var must point to the sdk installation path
 include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
 
-project(PicoCoffeeMachine)
+project(PicoCoffeeMachine C CXX ASM)
 
 # initialize the Pico SDK
 pico_sdk_init()
 
-add_subdirectory(extern/pico-ssd1306)
+set(LIB_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/extern/daschr/pico-ssd1306/ssd1306.c)
+add_library(pico_ssd1306 STATIC ${LIB_SOURCES})
+target_include_directories(pico_ssd1306 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/extern/daschr/pico-ssd1306)
+target_link_libraries(pico_ssd1306 pico_stdlib hardware_i2c)
 
 # Create the binary from sources
 set(SOURCES src/pico_coffee_machine_main.cpp)
