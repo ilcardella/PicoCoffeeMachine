@@ -118,18 +118,18 @@ private:
      *
      * @param period The period of the blinking effect
      * @param timestamp The current up time timestamp (system millis())
-     * @param blink_on The function to call when the blink should be on
-     * @param predicate (optional) condition to enable/disable the blinking
+     * @param show_image The function to call when the image should be displayed
+     * @param should_blink (optional) condition to enable/disable the blinking
      */
     void apply_blinking(
         const uint32_t &period, const uint64_t &timestamp,
-        std::function<void(void)> blink_on,
-        std::function<bool(void)> predicate = []()
+        std::function<void(void)> show_image,
+        std::function<bool(void)> should_blink = []()
         { return true; })
     {
-        if (predicate() && (timestamp % (period * 2)) > period || !predicate())
+        if (should_blink() && (timestamp % (period * 2)) > period || !should_blink())
         {
-            blink_on();
+            show_image();
         }
     }
 
