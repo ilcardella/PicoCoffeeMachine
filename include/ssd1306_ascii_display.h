@@ -45,10 +45,7 @@ public:
         oled->external_vcc = false;
         ssd1306_init(oled, 128, 64, 0x3C, i2c1);
         ssd1306_clear(oled);
-
-        // TODO Show initial logo
-        // ssd1306_bmp_show_image(oled, ICON_RPI_PICO, sizeof(ICON_RPI_PICO) / sizeof(ICON_RPI_PICO[0]));
-        ssd1306_draw_string(oled, 0, 0, 3, "STARTING...");
+        ssd1306_draw_string(oled, 0, 0, 2, "STARTING...");
         ssd1306_show(oled);
 
         // Record the start time
@@ -77,19 +74,19 @@ public:
 
     bool print(const unsigned &col, const unsigned &row, const int &data) override
     {
-        // TODO ssd1306_draw_string accepts a char* so the data must be converted first
+        // draw<uint32_t>(col, row, static_cast<uint32_t>(data));
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const float &data) override
     {
-        // TODO ssd1306_draw_string accepts a char* so the data must be converted first
+        // draw<double>(col, row, static_cast<double>(data));
         return true;
     }
 
     bool print(const unsigned &col, const unsigned &row, const double &data) override
     {
-        // TODO ssd1306_draw_string accepts a char* so the data must be converted first
+        // draw<double>(col, row, data);
         return true;
     }
 
@@ -122,20 +119,15 @@ private:
      * @param period The period of the blinking effect
      * @param timestamp The current up time timestamp (system millis())
      * @param blink_on The function to call when the blink should be on
-     * @param blink_off The function to call when the blink should be off
      * @param predicate (optional) condition to enable/disable the blinking
      */
     void apply_blinking(
-        const uint32_t &period, const unsigned long &timestamp,
-        std::function<void(void)> blink_on, std::function<void(void)> blink_off,
+        const uint32_t &period, const uint64_t &timestamp,
+        std::function<void(void)> blink_on,
         std::function<bool(void)> predicate = []()
         { return true; })
     {
-        if (predicate())
-        {
-            ((timestamp % (period * 2)) > period) ? blink_on() : blink_off();
-        }
-        else
+        if (predicate() && (timestamp % (period * 2)) > period || !predicate())
         {
             blink_on();
         }
@@ -145,8 +137,8 @@ private:
     void draw(const uint32_t &col, const uint32_t &row, const T &value);
 
     ssd1306_t *oled;
-    static constexpr unsigned long LOGO_TIME = 2000; // ms
-    unsigned long start_time = 0.0;
+    static constexpr uint64_t LOGO_TIME = 2000; // ms
+    uint64_t start_time = 0.0;
 };
 
 template <>
@@ -173,7 +165,12 @@ void SSD1306AsciiDisplay::draw(const uint32_t &col, const uint32_t &row,
 
 bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
 {
-    // Show the initial log for the configured amount of time
+    if (!oled)
+    {
+        return false;
+    }
+
+    // Show the initial logo for the configured amount of time
     if (is_logo_time())
     {
         return true;
@@ -190,27 +187,25 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
         return std::abs(status.target_temperature - status.current_temperature) > 3.0;
     };
 
-    // If eco_countdown is 0, then show a specific icon
+    // If eco_countdown is 0, then show a specific text
     if (eco_countdown < 1)
     {
-        ssd1306_draw_string(oled, 0, 0, 3, "TIMEOUT");
+        apply_blinking(
+            1000, now,
+            [this]()
+            {
+                ssd1306_draw_string(oled, 10, 0, 3, "TIMEOUT");
+            });
     }
     // Change the main icon based on the machine mode and make them blink if the
     // temperature is not within a "ready" range
-    // TODO ssd1306_bmp_show_image does not work with the images in icons.h
     else if (mode == Machine::Mode::WATER_MODE)
     {
         apply_blinking(
             1000, now,
             [this]()
             {
-                // ssd1306_bmp_show_image(oled, ICON_COFFEE, sizeof(ICON_COFFEE) / sizeof(ICON_COFFEE[0]));
-                ssd1306_draw_string(oled, 0, 0, 3, "COFFEE");
-            },
-            [this]()
-            {
-                // ssd1306_bmp_show_image(oled, ICON_EMPTY, sizeof(ICON_EMPTY) / sizeof(ICON_EMPTY[0]));
-                ssd1306_draw_string(oled, 0, 0, 3, "");
+                ssd1306_bmp_show_image_with_offset(oled, ICON_COFFEE, ICON_COFFEE_SIZE, 44, 0);
             },
             temp_not_ready);
     }
@@ -220,13 +215,7 @@ bool SSD1306AsciiDisplay::print_custom_display(const Machine::Status &status)
             1000, now,
             [this]()
             {
-                // ssd1306_bmp_show_image(oled, ICON_STEAM, sizeof(ICON_STEAM) / sizeof(ICON_STEAM[0]));
-                ssd1306_draw_string(oled, 0, 0, 3, "STEAM");
-            },
-            [this]()
-            {
-                // ssd1306_bmp_show_image(oled, ICON_EMPTY, sizeof(ICON_EMPTY) / sizeof(ICON_EMPTY[0]));
-                ssd1306_draw_string(oled, 0, 0, 3, "");
+                ssd1306_bmp_show_image_with_offset(oled, ICON_STEAM, ICON_STEAM_SIZE, 44, 0);
             },
             temp_not_ready);
     }
